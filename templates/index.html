@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Villa Real | Pisos y Azulejos</title>
+  <meta name="description" content="Villa Real Pisos y Azulejos en Villa de Álvarez, Colima. Catálogo y cotización por WhatsApp.">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <a class="logo-wrap" href="#inicio"><img src="/static/images/logo-villareal.jpg" alt="Villa Real Pisos y Azulejos"></a>
+  <nav>
+    <a href="#inicio">Inicio</a>
+    <a href="#productos">Productos</a>
+    <a href="#contacto">Contacto</a>
+  </nav>
+  <a class="header-wa" href="https://wa.me/523121157493" target="_blank"><span>◉</span><b>312 115 7493</b><small>WhatsApp</small></a>
+</header>
+
+<section class="hero" id="inicio">
+  <div class="hero-copy">
+    <span class="kicker">CALIDAD, DISEÑO Y DURABILIDAD</span>
+    <h1>PISOS Y AZULEJOS<br>QUE TRANSFORMAN<br>TUS ESPACIOS</h1>
+    <p>Encuentra pisos y azulejos para construcción, remodelación, comercio e industria. Consulta modelos y solicita tu cotización directamente por WhatsApp.</p>
+    <a class="primary-btn" href="https://wa.me/523121157493?text=Hola%2C%20quiero%20una%20cotizaci%C3%B3n%20de%20pisos%20y%20azulejos." target="_blank">Cotiza por WhatsApp</a>
+  </div>
+  <aside class="business-card">
+    <h2>VILLA REAL<br><span>PISOS Y AZULEJOS</span></h2>
+    <p><strong>📍</strong> Enrique Corona Morfín #93 A<br>Villa de Álvarez, Colima</p>
+    <p><strong>☎</strong> 312 115 7493</p>
+    <p><strong>✉</strong> pinturaspegaza@hotmail.com</p>
+    <p><strong>◷</strong> Lunes a viernes:<br>8:00 a 14:00 y 16:00 a 18:00<br>Sábado: 9:00 a 14:00</p>
+    <a href="https://maps.app.goo.gl/3mihpeQqbXcLS3G66" target="_blank">📍 CÓMO LLEGAR</a>
+  </aside>
+</section>
+
+<section class="products-section" id="productos">
+  <div class="section-head">
+    <div><span class="kicker">CATÁLOGO</span><h2>Nuestros productos</h2></div>
+    <div class="filters">
+      <input id="search" type="search" placeholder="Buscar piso, medida, color...">
+      <select id="category"><option value="">Todas las categorías</option></select>
+    </div>
+  </div>
+  <p class="gallery-hint">Haz clic en la fotografía de un producto para ver su galería completa.</p>
+  <div class="results-bar"><span id="count">Cargando...</span><button id="quoteBtn">Ver cotización (<span id="quoteCount">0</span>)</button></div>
+  <div id="grid" class="product-grid"></div>
+</section>
+
+<section class="benefits">
+  <div><b>▦</b><span><strong>AMPLIA VARIEDAD</strong><small>Pisos y azulejos para distintos proyectos.</small></span></div>
+  <div><b>◇</b><span><strong>CALIDAD</strong><small>Materiales para espacios residenciales y comerciales.</small></span></div>
+  <div><b>◎</b><span><strong>ASESORÍA</strong><small>Te ayudamos a elegir la mejor opción.</small></span></div>
+  <div><b>▣</b><span><strong>COTIZACIÓN RÁPIDA</strong><small>Solicítala directamente por WhatsApp.</small></span></div>
+</section>
+
+<section class="contact" id="contacto">
+  <div>
+    <span class="kicker">VISÍTANOS</span>
+    <h2>Villa Real Pisos y Azulejos</h2>
+    <p>Enrique Corona Morfín #93 A, Villa de Álvarez, Colima.</p>
+  </div>
+  <div class="contact-actions">
+    <a href="https://maps.app.goo.gl/3mihpeQqbXcLS3G66" target="_blank">Cómo llegar</a>
+    <a href="https://wa.me/523121157493" target="_blank">WhatsApp</a>
+  </div>
+</section>
+
+<footer>© Villa Real Pisos y Azulejos · 312 115 7493 · pinturaspegaza@hotmail.com</footer>
+
+<!-- Gallery -->
+<div id="galleryModal" class="modal hidden">
+  <div class="gallery-box">
+    <button class="modal-close" onclick="closeGallery()">×</button>
+    <h3 id="galleryTitle"></h3>
+    <div class="gallery-layout">
+      <div class="main-photo-wrap"><img id="mainPhoto" src="" alt=""></div>
+      <div id="thumbs" class="thumbs"></div>
+    </div>
+    <div class="gallery-nav">
+      <button onclick="prevImage()">‹</button><span id="imageCounter"></span><button onclick="nextImage()">›</button>
+    </div>
+  </div>
+</div>
+
+<!-- Quote -->
+<div id="quoteModal" class="modal hidden">
+  <div class="quote-box">
+    <button class="modal-close" onclick="closeQuote()">×</button>
+    <h3>Solicitud de cotización</h3>
+    <div id="quoteList"></div>
+    <label>Nombre / empresa<input id="client" placeholder="Ej. Constructora ABC"></label>
+    <label>Mensaje adicional<textarea id="note" placeholder="Cantidad, entrega, obra, etc."></textarea></label>
+    <button class="send-wa" onclick="sendWhatsApp()">Enviar por WhatsApp</button>
+  </div>
+</div>
+
+<script>
+const WHATSAPP_NUMBER = "523121157493";
+let products = [], cart = [], galleryImages = [], galleryIndex = 0;
+
+function esc(v){return String(v??"").replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));}
+function money(v){return Number(v||0).toLocaleString("es-MX",{style:"currency",currency:"MXN"});}
+
+async function loadProducts(){
+  const r=await fetch("/api/productos"); products=await r.json();
+  const cats=[...new Set(products.map(p=>p.categoria).filter(Boolean))].sort();
+  category.innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join("");
+  render();
+}
+function render(){
+  const q=search.value.toLowerCase().trim(), cat=category.value;
+  const list=products.filter(p=>{
+    const t=[p.producto,p.codigo,p.medida,p.color,p.acabado,p.descripcion].join(" ").toLowerCase();
+    return(!q||t.includes(q))&&(!cat||p.categoria===cat);
+  });
+  count.textContent=`${list.length} productos`;
+  grid.innerHTML=list.map((p,i)=>{
+    const img=(p.images&&p.images[0])||"";
+    const realIndex=products.indexOf(p);
+    return `<article class="product-card">
+      <button class="product-photo" onclick="openGallery(${realIndex})" aria-label="Ver fotografías de ${esc(p.producto)}">
+        ${img?`<img src="${esc(img)}" loading="lazy" alt="${esc(p.producto)}">`:`<span>Sin fotografía</span>`}
+        ${p.images&&p.images.length>1?`<em>📷 ${p.images.length} fotos</em>`:""}
+      </button>
+      <div class="product-info">
+        <small>${esc(p.codigo)} ${p.categoria?"· "+esc(p.categoria):""}</small>
+        <h3>${esc(p.producto)}</h3>
+        <p class="spec">${esc(p.medida)} ${p.color?"· "+esc(p.color):""} ${p.acabado?"· "+esc(p.acabado):""}</p>
+        <p class="desc">${esc(p.descripcion)}</p>
+        <div class="product-bottom"><strong>${money(p.precio)}</strong><button onclick="addToQuote(${realIndex})">Agregar</button></div>
+      </div>
+    </article>`;
+  }).join("")||'<div class="empty">No encontramos productos.</div>';
+}
+function openGallery(i){
+  const p=products[i]; galleryImages=p.images||[]; galleryIndex=0;
+  if(!galleryImages.length)return;
+  galleryTitle.textContent=p.producto; updateGallery(); galleryModal.classList.remove("hidden");
+}
+function updateGallery(){
+  mainPhoto.src=galleryImages[galleryIndex]; mainPhoto.alt=galleryTitle.textContent;
+  imageCounter.textContent=`${galleryIndex+1} / ${galleryImages.length}`;
+  thumbs.innerHTML=galleryImages.map((img,i)=>`<button class="${i===galleryIndex?'active':''}" onclick="setImage(${i})"><img src="${esc(img)}" alt=""></button>`).join("");
+}
+function setImage(i){galleryIndex=i;updateGallery();}
+function prevImage(){galleryIndex=(galleryIndex-1+galleryImages.length)%galleryImages.length;updateGallery();}
+function nextImage(){galleryIndex=(galleryIndex+1)%galleryImages.length;updateGallery();}
+function closeGallery(){galleryModal.classList.add("hidden");}
+function addToQuote(i){const p=products[i];if(!cart.includes(p))cart.push(p);quoteCount.textContent=cart.length;}
+function openQuote(){
+ if(!cart.length)return alert("Agrega al menos un producto.");
+ quoteList.innerHTML=cart.map(p=>`<div class="quote-item"><b>${esc(p.producto)}</b><span>${esc(p.medida)} · ${money(p.precio)}</span></div>`).join("");
+ quoteModal.classList.remove("hidden");
+}
+function closeQuote(){quoteModal.classList.add("hidden");}
+function sendWhatsApp(){
+ const c=client.value.trim(),n=note.value.trim();
+ let msg="Hola, quiero solicitar una cotización.%0A%0A";
+ if(c)msg+="Cliente/empresa: "+encodeURIComponent(c)+"%0A%0A";
+ cart.forEach(p=>msg+="• "+encodeURIComponent(p.producto)+" | "+encodeURIComponent(p.medida)+" | "+encodeURIComponent(money(p.precio))+"%0A");
+ if(n)msg+="%0A"+encodeURIComponent(n);
+ window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`,"_blank");
+}
+search.addEventListener("input",render); category.addEventListener("change",render); quoteBtn.addEventListener("click",openQuote);
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeGallery();closeQuote();} if(!galleryModal.classList.contains("hidden")){if(e.key==="ArrowLeft")prevImage();if(e.key==="ArrowRight")nextImage();}});
+loadProducts();
+</script>
+</body>
+</html>
